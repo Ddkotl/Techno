@@ -10,11 +10,29 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-  email      String   @unique
-  name       String   @unique
-  password   String
-  avatarPath String   @default("/uploads/default-avatar.png") @map("avatar_path")
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  email     String   @unique
+  password  String
+  roles     Role[]
+  Token     Token[]
+  // name       String   @unique
+  // avatarPath String   @default("/uploads/default-avatar.png") @map("avatar_path")
+
+  @@map("users")
+}
+
+model Token {
+  token  String   @unique
+  exp    DateTime
+  user   User     @relation(fields: [userId], references: [id])
+  userId String
+
+  @@map("tokens")
+}
+
+enum Role {
+  ADMIN
+  USER
 }
