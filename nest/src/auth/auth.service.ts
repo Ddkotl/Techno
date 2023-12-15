@@ -23,6 +23,21 @@ export class AuthService {
     private readonly prismaServise: PrismaService,
   ) {}
 
+  async refreshTokens(refreshToken: string, agent: string): Promise<Tokens> {
+    const token = await this.prismaServise.token.findUnique({
+      where: { token: refreshToken },
+    });
+    if (!token) {
+      throw new UnauthorizedException();
+    }
+    await this.prismaServise.token.delete({ where: { token: refreshToken } });
+    if (new Date(token.exp) < new Date()) {
+      throw new UnauthorizedException();
+    }
+    const user = await this.userServise.findOne(token.userId);
+    return this.genereateTokens(user, agent);
+  }
+
   async register(dto: RegisterDto) {
     const user: User = await this.userServise
       .findOne(dto.email)
@@ -39,7 +54,7 @@ export class AuthService {
     });
   }
 
-  async login(dto: LoginDto): Promise<Tokens> {
+  async login(dto: LoginDto, agent: string): Promise<Tokens> {
     const user: User = await this.userServise
       .findOne(dto.email)
       .catch((err) => {
@@ -49,6 +64,10 @@ export class AuthService {
     if (!user || !compareSync(dto.password, user.password)) {
       throw new UnauthorizedException('Неверный логин или пароль');
     }
+    return this.genereateTokens(user, agent);
+  }
+
+  private async genereateTokens(user: User, agent: string): Promise<Tokens> {
     const accessToken =
       'Bearer ' +
       this.jwtServise.sign({
@@ -56,16 +75,23 @@ export class AuthService {
         email: user.email,
         roles: user.roles,
       });
-    const refreshToken = await this.getRefreshToken(user.id);
+    const refreshToken = await this.getRefreshToken(user.id, agent);
     return { accessToken, refreshToken };
   }
 
-  private async getRefreshToken(userId: string): Promise<Token> {
-    return this.prismaServise.token.create({
-      data: {
+  private async getRefreshToken(userId: string, agent: string): Promise<Token> {
+    const _token = await this.prismaServise.token.findFirst({
+      where: { userId, userAgent: agent },
+    });
+    const token = _token?.token ?? '';
+    return this.prismaServise.token.upsert({
+      where: { token },
+      update: { token: v4(), exp: add(new Date(), { months: 1 }) },
+      create: {
         token: v4(),
         exp: add(new Date(), { months: 1 }),
         userId,
+        userAgent: agent,
       },
     });
   }

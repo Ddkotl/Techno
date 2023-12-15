@@ -17,7 +17,8 @@ CREATE TABLE "users" (
 CREATE TABLE "tokens" (
     "token" TEXT NOT NULL,
     "exp" TIMESTAMP(3) NOT NULL,
-    "userId" TEXT NOT NULL
+    "userId" TEXT NOT NULL,
+    "user_agent" TEXT NOT NULL
 );
 
 -- CreateIndex
