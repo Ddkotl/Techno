@@ -1,4 +1,4 @@
-import { Cookie, UserAgent } from '@common/decorators';
+import { Cookie, Public, UserAgent } from '@common/decorators';
 import {
   BadRequestException,
   Body,
@@ -16,7 +16,7 @@ import { LoginDto, RegisterDto } from './dto';
 import { Tokens } from './interfaces';
 
 const REFRESH_TOKEN = 'refreshtoken';
-
+@Public()
 @Controller('auth')
 export class AuthController {
   constructor(
