@@ -2,15 +2,18 @@ import { Cookie, Public, UserAgent } from '@common/decorators';
 import {
   BadRequestException,
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Get,
   HttpStatus,
   Post,
   Res,
   UnauthorizedException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
+import { UserResponse } from 'src/user/responses';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto';
 import { Tokens } from './interfaces';
@@ -24,6 +27,7 @@ export class AuthController {
     private readonly configServise: ConfigService,
   ) {}
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     const user = await this.authService.register(dto);
@@ -34,7 +38,7 @@ export class AuthController {
         )}`,
       );
     }
-    return user;
+    return new UserResponse(user);
   }
 
   @Post('login')
