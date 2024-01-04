@@ -1,3 +1,4 @@
+import { CurrentUser } from '@common/decorators';
 import {
   Body,
   ClassSerializerInterceptor,
@@ -9,6 +10,7 @@ import {
   Post,
   UseInterceptors,
 } from '@nestjs/common';
+import { JwtPayLoad } from 'src/auth/interfaces';
 import { UserResponse } from './responses';
 import { UserService } from './user.service';
 
@@ -25,15 +27,18 @@ export class UserController {
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Get(':idOrEmail')
-  async findOneUser(@Param('idOrEmail') idOrEmail: string) {
+  async findOneUser(
+    @Param('idOrEmail') idOrEmail: string,
+  ): Promise<UserResponse> {
     const user = await this.userService.findOne(idOrEmail);
     return new UserResponse(user);
   }
 
-  @UseInterceptors(ClassSerializerInterceptor)
   @Delete(':id')
-  async deleteUser(@Param('id', ParseUUIDPipe) id: string) {
-    const user = await this.userService.delete(id);
-    return new UserResponse(user);
+  async deleteUser(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayLoad,
+  ): Promise<{ id: string }> {
+    return this.userService.delete(id, user);
   }
 }

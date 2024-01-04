@@ -48,7 +48,7 @@ export class AuthService {
     if (user) {
       throw new ConflictException('Пользователь с таким email уже существует');
     }
-    return this.userServise.save(dto).catch((err) => {
+    return this.userServise.save({ user: dto }).catch((err) => {
       this.logger.error(err);
       return null;
     });
