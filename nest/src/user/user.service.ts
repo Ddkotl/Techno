@@ -9,9 +9,9 @@ export class UserService {
   constructor(private readonly prismaService: PrismaService) {}
 
   save(user: Partial<User>) {
-    console.log(user);
-    const hashedPassword = this.hashPassword(user.password);
-    console.log(hashedPassword);
+    const hashedPassword = user?.password
+      ? this.hashPassword(user.password)
+      : null;
     return this.prismaService.user.create({
       data: {
         email: user.email,
@@ -40,7 +40,6 @@ export class UserService {
   }
 
   private hashPassword(password: string) {
-    console.log(password);
     return hashSync(password, genSaltSync(10));
   }
 }
