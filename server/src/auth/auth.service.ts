@@ -1,10 +1,16 @@
 import { faker } from '@faker-js/faker';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
-import { hash } from 'argon2';
+import { hash, verify } from 'argon2';
+
 import { PrismaService } from 'src/prisma.service';
-import { AuthDto } from './auth.dto';
+import { AuthDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +18,34 @@ export class AuthService {
     private readonly prismaServise: PrismaService,
     private readonly jwtServise: JwtService,
   ) {}
+
+  async login(dto: AuthDto) {
+    const user = await this.validateUser(dto);
+    const tokens = await this.issueTokens(user.id);
+
+    return {
+      user: this.returnUserFields(user),
+      ...tokens,
+    };
+  }
+
+  async getNewToken(refreshToken: string) {
+    const result = await this.jwtServise.verifyAsync(refreshToken);
+    if (result) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    const user = await this.prismaServise.user.findUnique({
+      where: {
+        id: result.id,
+      },
+    });
+    const tokens = await this.issueTokens(user.id);
+
+    return {
+      user: this.returnUserFields(user),
+      ...tokens,
+    };
+  }
 
   async register(dto: AuthDto) {
     const oldUser = await this.prismaServise.user.findUnique({
@@ -59,5 +93,24 @@ export class AuthService {
       id: user.id,
       email: user.email,
     };
+  }
+
+  private async validateUser(dto: AuthDto) {
+    const user = await this.prismaServise.user.findUnique({
+      where: {
+        email: dto.email,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException('Такого пользователя нет');
+    }
+
+    const isValidPassword = await verify(user.password, dto.password);
+
+    if (!isValidPassword) {
+      throw new UnauthorizedException('Неправильные данные');
+    }
+
+    return user;
   }
 }
