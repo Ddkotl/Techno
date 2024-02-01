@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   HttpCode,
+  Param,
+  Patch,
   Put,
   UsePipes,
   ValidationPipe,
@@ -30,13 +32,13 @@ export class UserController {
     return this.userService.updateProfile(id, dto);
   }
 
-  // @HttpCode(200)
-  // @Auth()
-  // @Patch('profile/favorites/:postId')
-  // async toggleFavorite(
-  //   @Param('postId') postId: string,
-  //   @CurrentUser('id') id: number,
-  // ) {
-  //   return this.userService.toggleFavorite(id, postId);
-  // }
+  @HttpCode(200)
+  @Auth()
+  @Patch('profile/favorites/:postId')
+  async toggleFavorite(
+    @Param('postId') postId: string,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.userService.toggleFavorite(userId, +postId);
+  }
 }
