@@ -73,10 +73,10 @@ export class UserService {
       where: { id: user.id },
       data: {
         favorites: {
-          [isExist ? 'disconect' : 'conect']: { id: postId },
+          [isExist ? 'disconnect' : 'connect']: { id: postId },
         },
       },
     });
-    return 'Success';
+    return { message: 'success ' };
   }
 }
