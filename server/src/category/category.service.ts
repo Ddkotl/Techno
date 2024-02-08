@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import urlSlug from 'url-slug';
 import { CategoryDto } from './dto/category.dto';
@@ -17,7 +21,7 @@ export class CategoryService {
     });
 
     if (!category) {
-      throw new Error('Category not found');
+      throw new NotFoundException('Category not found');
     }
     return category;
   }
@@ -30,7 +34,7 @@ export class CategoryService {
     });
 
     if (!category) {
-      throw new Error('Category not found');
+      throw new NotFoundException('Category not found');
     }
     return category;
   }
