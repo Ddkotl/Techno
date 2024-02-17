@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { ReviewDto } from './dto/review.dto';
 import { returnReviewObject } from './return-review.object';
@@ -15,6 +15,14 @@ export class ReviewService {
   }
 
   async create(userId: number, dto: ReviewDto, postId: number) {
+    const isPostExist = await this.prismaServise.post.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+    if (!isPostExist) {
+      throw new NotFoundException('Такого поста не существует');
+    }
     return this.prismaServise.review.create({
       data: {
         ...dto,
