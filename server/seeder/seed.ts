@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Post, PrismaClient } from '@prisma/client';
+import { hash } from 'argon2';
 import * as dotenv from 'dotenv';
 import urlSlug from 'url-slug';
 import { getRandomNumber } from '../src/utils/rundom-number';
@@ -17,6 +18,10 @@ const createPosts = async (quantity: number) => {
     const postContent = faker.string.alpha(150);
     const categoryName = faker.commerce.department();
     const categorySlug = urlSlug(categoryName);
+    const userName = faker.internet.userName();
+    const userEmail = faker.internet.email();
+    const userPassword = await hash(faker.internet.password());
+    const userPhone = faker.phone.number();
 
     const post = await prisma.post.create({
       data: {
@@ -24,6 +29,15 @@ const createPosts = async (quantity: number) => {
         slug: postSlug,
         description: postDescription,
         content: postContent,
+        user: {
+          create: {
+            email: userEmail,
+            name: userName,
+            password: userPassword,
+            phone: userPhone,
+            avatarPath: faker.image.avatar(),
+          },
+        },
         category: {
           create: {
             name: categoryName,
